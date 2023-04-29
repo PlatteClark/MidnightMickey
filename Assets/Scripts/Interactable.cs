@@ -1,14 +1,39 @@
+#nullable enable
+
 using UnityEngine;
 using UnityEngine.UI;
 
-
+[RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(BoxCollider2D))]
 public class Interactable : MonoBehaviour
 {
     public GameObject interactionPrompt;
-    [SerializeField] GameObject[] messages;
-    [SerializeField] GameObject picture;
+    public bool isClue;
+    private bool isFound = false;
 
-    private int interactionQueue = 0;
+    public delegate void InteractEvent(string soundName);
+    public event InteractEvent OnInteract;
+
+    public delegate void PlayerLeftTriggerAreaEvent();
+    public event PlayerLeftTriggerAreaEvent OnPlayerLeftTriggerArea;
+
+    public bool Interact(string soundName = "")
+    {
+        Debug.Log("Interacted with the object!");
+        OnInteract?.Invoke(soundName);
+
+        if (!isFound)
+        {
+            isFound = true;
+            return isClue; 
+        }
+        else
+        {
+            return false;
+        }
+    }
+
 
     private void Start()
     {
@@ -28,19 +53,7 @@ public class Interactable : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             interactionPrompt.SetActive(false);
-            messages[interactionQueue -1].SetActive(false);
-            picture.SetActive(false);
-            interactionQueue = 0;
+            OnPlayerLeftTriggerArea?.Invoke();
         }
-    }
-
-    public void Interact()
-    {
-        Debug.Log("Interacted with the object!");
-        if(interactionQueue > 0) { messages[interactionQueue - 1].SetActive(false); }
-        
-        messages[interactionQueue].SetActive(true);
-        picture.SetActive(true);
-        interactionQueue++;
     }
 }
